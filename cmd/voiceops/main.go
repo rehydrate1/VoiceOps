@@ -1,12 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+var urls = []string{
+	"https://google.com",
+	"https://github.com",
+	"https://non-existent-site.ru",
+}
 
 type SberRequest struct {
 	MessageID int64  `json:"messageId"`
@@ -16,7 +24,7 @@ type SberRequest struct {
 		UserChannel string      `json:"userChannel"`
 		Sub         string      `json:"sub"`
 	} `json:"uuid"`
-	Payload   struct {
+	Payload struct {
 		Message struct {
 			OriginalText string `json:"original_text"`
 		} `json:"message"`
@@ -31,7 +39,6 @@ func main() {
 	log.Println("Server is starting...")
 	if err := router.Run(":8080"); err != nil {
 		log.Fatalf("Error while starting server: %v", err)
-		os.Exit(1)
 	}
 }
 
@@ -46,27 +53,73 @@ func SberHandler(c *gin.Context) {
 
 	log.Printf("Received a request. MessageID: %d", req.MessageID)
 
+	text := strings.ToLower(req.Payload.Message.OriginalText)
+
+	var pronounceText string
+	if text == "" || strings.Contains(text, "запусти") || strings.Contains(text, "открой") {
+		pronounceText = "VoiceOps на связи. Скажите 'Проверь прод', чтобы начать диагностику."
+	} else if strings.Contains(text, "проверь") {
+		pronounceText = checkSites(urls)
+	} else {
+		pronounceText = "Я вас не поняла. Скажите 'Проверь прод'."
+	}
+
 	response := gin.H{
 		"messageName": "ANSWER_TO_USER",
-		"sessionId": req.SessionID,
-		"messageId": req.MessageID,
+		"sessionId":   req.SessionID,
+		"messageId":   req.MessageID,
 		"uuid":        req.Uuid,
 		"payload": gin.H{
 			"device": gin.H{
 				"deviceId": "sber-boom-home",
 			},
-			"pronounceText": "Связь установлена! Я готова управлять сервером.",
+			"pronounceText": pronounceText,
 			"items": []gin.H{
 				{
 					"bubble": gin.H{
-						"text": "Связь установлена! Я готова управлять сервером.",
+						"text": pronounceText,
 					},
 				},
 			},
-			"finished": false,
+			"finished":       false,
 			"auto_listening": true,
 		},
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func checkSites(urls []string) string {
+	client := http.Client{
+		Timeout: 2 * time.Second,
+	}
+
+	badSites := []string{}
+
+	clean := func(u string) string {
+		u = strings.Replace(u, "https://", "", 1)
+		u = strings.Replace(u, "http://", "", 1)
+		return u
+	}
+
+	for _, url := range urls {
+		resp, err := client.Get(url)
+		if err != nil {
+			log.Printf("Failed to get %s: %v", url, err)
+			badSites = append(badSites, clean(url))
+			continue
+		}
+
+		if resp.StatusCode != 200 {
+			badSites = append(badSites, clean(url))
+		}
+
+		resp.Body.Close()
+	}
+
+	if len(badSites) == 0 {
+		return "Все системы работают штатно. Ошибок не обнаружено"
+	}
+
+	return fmt.Sprintf("Обнаружены проблемы с сайтами: %s", strings.Join(badSites, ", "))
 }
