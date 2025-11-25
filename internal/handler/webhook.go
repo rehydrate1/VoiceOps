@@ -75,12 +75,29 @@ func (h *Handler) SberWebhook(c *gin.Context) {
 	}
 
 	if !commandFound {
-		if text == "" || strings.Contains(text, "запусти") || strings.Contains(text, "открой") {
+		if text == "" || strings.Contains(text, "войс опс") || strings.Contains(text, "открой") {
 			pronounceText = "VoiceOps на связи"
-		} else if strings.Contains(text, "проверь") {
+		} else if strings.Contains(text, "проверь") || 
+                  strings.Contains(text, "мониторинг") || 
+                  strings.Contains(text, "диагностик") ||
+                  strings.Contains(text, "статус") {
+
 			pronounceText = service.CheckSites(h.Cfg.Monitoring.URLs)
+
+		} else if strings.Contains(text, "список") || 
+				  strings.Contains(text, "команды") || 
+		 		  strings.Contains(text, "помощь") {
+
+			var capabilities []string
+			capabilities = append(capabilities, "- запусти диагностику")
+
+			for _, cmd := range h.Cfg.Commands {
+				capabilities = append(capabilities, cmd.Phrase)
+			}
+
+			pronounceText = "Я умею выполнять следующие команды:\n" + strings.Join(capabilities, "\n- ")
 		} else {
-			pronounceText = "Я вас не поняла. Скажите 'Список команд' чтобы узнать команды."
+			pronounceText = "Я вас не поняла. Скажите 'Список команд' чтобы узнать мои возможности."
 		}
 	}
 
