@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"time"
@@ -8,15 +9,15 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func RemoteExec(host, user, keyPath, command string) (string, error) {
+func RemoteExec(host, user, keyPath, command string) (string, string, error) {
 	key, err := os.ReadFile(keyPath)
 	if err != nil {
-		return "", fmt.Errorf("unable to read private key: %w", err)
+		return "", "", fmt.Errorf("unable to read private key: %w", err)
 	}
 
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse private key: %w", err)
+		return "", "", fmt.Errorf("unable to parse private key: %w", err)
 	}
 
 	config := &ssh.ClientConfig{
@@ -30,20 +31,21 @@ func RemoteExec(host, user, keyPath, command string) (string, error) {
 
 	client, err := ssh.Dial("tcp", host, config)
 	if err != nil {
-		return "", fmt.Errorf("failed to dial: %w", err)
+		return "", "", fmt.Errorf("failed to dial: %w", err)
 	}
 	defer client.Close()
 
 	session, err := client.NewSession()
 	if err != nil {
-		return "", fmt.Errorf("failed to create session: %w", err)
+		return "", "", fmt.Errorf("failed to create session: %w", err)
 	}
 	defer session.Close()
 
-	output, err := session.CombinedOutput(command)
-	if err != nil {
-		return "", fmt.Errorf("failed to run command: %w", err)
-	}
+	var stdoutBuf, stderrBuf bytes.Buffer
+	session.Stdout = &stdoutBuf
+	session.Stderr = &stderrBuf
 
-	return string(output), nil
+	err = session.Run(command)
+
+	return stdoutBuf.String(), stderrBuf.String(), err
 }

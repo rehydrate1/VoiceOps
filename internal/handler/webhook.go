@@ -37,24 +37,33 @@ func (h *Handler) SberWebhook(c *gin.Context) {
 	var pronounceText string
 	commandFound := false
 
-	// TODO: научить различать stdout и stderr
 	for _, cmd := range h.Cfg.Commands {
 		if strings.Contains(text, strings.ToLower(cmd.Phrase)) {
-			output, err := service.RemoteExec(
+			stdout, stderr, err := service.RemoteExec(
 				h.Cfg.SSH.Host,
 				h.Cfg.SSH.User,
 				h.Cfg.SSH.KeyPath,
 				cmd.Script,
 			)
+			stdout = strings.TrimSpace(stdout)
+			stderr = strings.TrimSpace(stderr)
 
 			if err != nil {
-				log.Printf("Command failed: %v", err)
+				log.Printf("Command failed. Error: %v | Stderr: %s", err, stderr)
 				pronounceText = fmt.Sprintf("Ошибка выполнения комманды: %v", err)
-			} else {
-				output = strings.TrimSpace(output)
 
+				if stderr != "" {
+					pronounceText = fmt.Sprintf("Ошибка выполнения: %s", stderr)
+				} else {
+					pronounceText = fmt.Sprintf("Команда упала: %v", err)
+				}
+			} else {
+				log.Printf("Command Success. Stdout: %s", stdout)
 				if strings.Contains(cmd.Response, "%s") {
-					pronounceText = fmt.Sprintf(cmd.Response, output)
+					if stdout == "" {
+						stdout = "нет данных"
+					}
+					pronounceText = fmt.Sprintf(cmd.Response, stdout)
 				} else {
 					pronounceText = cmd.Response
 				}
@@ -67,11 +76,11 @@ func (h *Handler) SberWebhook(c *gin.Context) {
 
 	if !commandFound {
 		if text == "" || strings.Contains(text, "запусти") || strings.Contains(text, "открой") {
-			pronounceText = "VoiceOps на связи. Скажите 'Проверь прод', чтобы начать диагностику."
+			pronounceText = "VoiceOps на связи"
 		} else if strings.Contains(text, "проверь") {
 			pronounceText = service.CheckSites(h.Cfg.Monitoring.URLs)
 		} else {
-			pronounceText = "Я вас не поняла. Скажите 'Проверь прод' или 'Перезагрузи бота'."
+			pronounceText = "Я вас не поняла. Скажите 'Список команд' чтобы узнать команды."
 		}
 	}
 
