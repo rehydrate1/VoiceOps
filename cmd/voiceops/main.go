@@ -5,7 +5,6 @@ import (
 
 	"github.com/rehydrate1/VoiceOps/internal/config"
 	"github.com/rehydrate1/VoiceOps/internal/handler"
-	"github.com/rehydrate1/VoiceOps/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,20 +14,6 @@ func main() {
 	cfg, err := config.LoadConfig("./configs/config.yaml")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
-	}
-
-	// test ssh
-	output, err := service.RemoteExec(
-		cfg.SSH.Host,
-		cfg.SSH.User,
-		cfg.SSH.KeyPath,
-		"uptime",
-	)
-
-	if err != nil {
-		log.Printf("SSH Test Failed: %v", err)
-	} else {
-		log.Printf("SSH Test Success! Server uptime: %s", output)
 	}
 
 	// init router

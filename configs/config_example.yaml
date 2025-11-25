@@ -2,3 +2,12 @@ ssh:
   host: "192.168.1.1:22"
   user: "user"
   key_path: "./id_rsa"
+
+commands:
+  - phrase: "перезагрузи бота"
+    script: "docker restart bot-1"
+    response: "Готово. Бот перезагружен"
+
+  - phrase: "статус сервера"
+    script: "uptime"
+    response: "Сервер в порядке. Аптайм: %s"

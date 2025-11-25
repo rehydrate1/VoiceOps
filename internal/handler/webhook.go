@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -37,14 +38,47 @@ func (h *Handler) SberWebhook(c *gin.Context) {
 	log.Printf("Received a request. MessageID: %d", req.MessageID)
 
 	text := strings.ToLower(req.Payload.Message.OriginalText)
+	log.Printf("User command: %s", text)
 
 	var pronounceText string
-	if text == "" || strings.Contains(text, "запусти") || strings.Contains(text, "открой") {
-		pronounceText = "VoiceOps на связи. Скажите 'Проверь прод', чтобы начать диагностику."
-	} else if strings.Contains(text, "проверь") {
-		pronounceText = service.CheckSites(urls)
-	} else {
-		pronounceText = "Я вас не поняла. Скажите 'Проверь прод'."
+	commandFound := false
+
+	// TODO: научить различать stdout и stderr
+	for _, cmd := range h.Cfg.Commands {
+		if strings.Contains(text, strings.ToLower(cmd.Phrase)) {
+			output, err := service.RemoteExec(
+				h.Cfg.SSH.Host,
+				h.Cfg.SSH.User,
+				h.Cfg.SSH.KeyPath,
+				cmd.Script,
+			)
+
+			if err != nil {
+				log.Printf("Command failed: %v", err)
+				pronounceText = fmt.Sprintf("Ошибка выполнения комманды: %v", err)
+			} else {
+				output = strings.TrimSpace(output)
+
+				if strings.Contains(cmd.Response, "%s") {
+					pronounceText = fmt.Sprintf(cmd.Response, output)
+				} else {
+					pronounceText = cmd.Response
+				}
+			}
+
+			commandFound = true
+			break
+		}
+	}
+
+	if !commandFound {
+		if text == "" || strings.Contains(text, "запусти") || strings.Contains(text, "открой") {
+			pronounceText = "VoiceOps на связи. Скажите 'Проверь прод', чтобы начать диагностику."
+		} else if strings.Contains(text, "проверь") {
+			pronounceText = service.CheckSites(urls)
+		} else {
+			pronounceText = "Я вас не поняла. Скажите 'Проверь прод' или 'Перезагрузи бота'."
+		}
 	}
 
 	response := gin.H{

@@ -8,13 +8,20 @@ import (
 )
 
 type Config struct {
-	SSH SSHConfig `yaml:"ssh"`
+	SSH      SSHConfig `yaml:"ssh"`
+	Commands []Command `yaml:"commands"`
 }
 
 type SSHConfig struct {
 	Host    string `yaml:"host"`
 	User    string `yaml:"user"`
 	KeyPath string `yaml:"key_path"`
+}
+
+type Command struct {
+	Phrase   string `yaml:"phrase"`
+	Script   string `yaml:"script"`
+	Response string `yaml:"response"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {
