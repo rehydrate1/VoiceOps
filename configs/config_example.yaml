@@ -3,6 +3,11 @@ ssh:
   user: "user"
   key_path: "./id_rsa"
 
+monitoring:
+  urls:
+    - "https://google.com"
+    - "https://github.com"
+
 commands:
   - phrase: "перезагрузи бота"
     script: "docker restart bot-1"

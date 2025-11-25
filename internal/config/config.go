@@ -8,14 +8,19 @@ import (
 )
 
 type Config struct {
-	SSH      SSHConfig `yaml:"ssh"`
-	Commands []Command `yaml:"commands"`
+	SSH        SSHConfig        `yaml:"ssh"`
+	Monitoring MonitoringConfig `yaml:"monitoring"`
+	Commands   []Command        `yaml:"commands"`
 }
 
 type SSHConfig struct {
 	Host    string `yaml:"host"`
 	User    string `yaml:"user"`
 	KeyPath string `yaml:"key_path"`
+}
+
+type MonitoringConfig struct {
+	URLs []string `yaml:"urls"`
 }
 
 type Command struct {

@@ -12,12 +12,6 @@ import (
 	"github.com/rehydrate1/VoiceOps/internal/service"
 )
 
-var urls = []string{
-	"https://google.com",
-	"https://github.com",
-	"https://non-existent-site.ru",
-}
-
 type Handler struct {
 	Cfg *config.Config
 }
@@ -75,7 +69,7 @@ func (h *Handler) SberWebhook(c *gin.Context) {
 		if text == "" || strings.Contains(text, "запусти") || strings.Contains(text, "открой") {
 			pronounceText = "VoiceOps на связи. Скажите 'Проверь прод', чтобы начать диагностику."
 		} else if strings.Contains(text, "проверь") {
-			pronounceText = service.CheckSites(urls)
+			pronounceText = service.CheckSites(h.Cfg.Monitoring.URLs)
 		} else {
 			pronounceText = "Я вас не поняла. Скажите 'Проверь прод' или 'Перезагрузи бота'."
 		}
