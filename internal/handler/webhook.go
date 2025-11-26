@@ -75,7 +75,7 @@ func (h *Handler) SberWebhook(c *gin.Context) {
 	}
 
 	if !commandFound {
-		if text == "" || strings.Contains(text, "войс опс") || strings.Contains(text, "открой") {
+		if text == "" || strings.Contains(text, "voiceops") || strings.Contains(text, "открой") {
 			pronounceText = "VoiceOps на связи"
 		} else if strings.Contains(text, "проверь") || 
                   strings.Contains(text, "мониторинг") || 
@@ -89,13 +89,40 @@ func (h *Handler) SberWebhook(c *gin.Context) {
 		 		  strings.Contains(text, "помощь") {
 
 			var capabilities []string
-			capabilities = append(capabilities, "- запусти диагностику")
+			capabilities = append(capabilities, "- запусти диагностику", "включи пк")
 
 			for _, cmd := range h.Cfg.Commands {
 				capabilities = append(capabilities, cmd.Phrase)
 			}
 
 			pronounceText = "Я умею выполнять следующие команды:\n" + strings.Join(capabilities, "\n- ")
+		} else if strings.Contains(text, "включи") || strings.Contains(text, "разбуди") {
+			if !h.Cfg.WoL.Enabled {
+				pronounceText = "Функция Wake-On-LAN отключена в конфигурации"
+			} else {
+				deviceFound := false
+
+				for _, device := range h.Cfg.WoL.Devices {
+					if strings.Contains(text, strings.ToLower(device.Name)) {
+						err := service.WakeOnLan(device.Mac, device.BroadcastIP)
+						if err != nil {
+							log.Printf("WoL failed: %v", err)
+							pronounceText = "Не удалось разбудить"
+						} else {
+							pronounceText = fmt.Sprintf("Отправила магический пакет для устройства %s", device.Name)
+						}
+
+						deviceFound = true
+						break
+					}
+				}
+
+				if !deviceFound {
+					pronounceText = "Не знаю такое устройство. Проверьте конфиг"
+				}
+			}
+			
+
 		} else {
 			pronounceText = "Я вас не поняла. Скажите 'Список команд' чтобы узнать мои возможности."
 		}

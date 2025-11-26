@@ -11,6 +11,7 @@ type Config struct {
 	SSH        SSHConfig        `yaml:"ssh"`
 	Monitoring MonitoringConfig `yaml:"monitoring"`
 	Commands   []Command        `yaml:"commands"`
+	WoL        WoLConfig        `yaml:"wol"`
 }
 
 type SSHConfig struct {
@@ -27,6 +28,17 @@ type Command struct {
 	Phrase   string `yaml:"phrase"`
 	Script   string `yaml:"script"`
 	Response string `yaml:"response"`
+}
+
+type WoLConfig struct {
+	Enabled bool        `yaml:"enabled"`
+	Devices []WoLDevice `yaml:"devices"`
+}
+
+type WoLDevice struct {
+	Name        string `yaml:"name"`
+	Mac         string `yaml:"mac"`
+	BroadcastIP string `yaml:"broadcast_ip"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {

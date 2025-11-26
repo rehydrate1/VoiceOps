@@ -16,3 +16,10 @@ commands:
   - phrase: "статус сервера"
     script: "uptime"
     response: "Сервер в порядке. Аптайм: %s"
+
+wol:
+  enabled: false
+  devices:
+    - name: "мой пк"
+      mac: "AA:BB:CC:DD:EE:FF"
+      broadcast_ip: "255.255.255.255:9"
