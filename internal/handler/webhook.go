@@ -50,7 +50,6 @@ func (h *Handler) SberWebhook(c *gin.Context) {
 
 			if err != nil {
 				log.Printf("Command failed. Error: %v | Stderr: %s", err, stderr)
-				pronounceText = fmt.Sprintf("Ошибка выполнения комманды: %v", err)
 
 				if stderr != "" {
 					pronounceText = fmt.Sprintf("Ошибка выполнения: %s", stderr)
