@@ -37,4 +37,4 @@ jobs:
       run: go test -v ./...
 
     - name: Build Binary
-      run: go build -v -o voiceops ./cmd/VoiceOps/main.go
+      run: go build -v -o voiceops ./cmd/voiceops/main.go
