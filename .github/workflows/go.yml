@@ -22,7 +22,7 @@ jobs:
 
     - name: Prepare Config
       run: |
-        cp configs/config.yaml.example configs/config.yaml
+        cp configs/config_example.yaml configs/config.yaml
 
     - name: Install dependencies
       run: go mod download
