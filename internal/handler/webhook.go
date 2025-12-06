@@ -75,18 +75,18 @@ func (h *Handler) SberWebhook(c *gin.Context) {
 	}
 
 	if !commandFound {
-		if text == "" || strings.Contains(text, "voiceops") || strings.Contains(text, "открой") {
+		if text == "" || strings.Contains(text, "voiceops") || strings.Contains(text, "панель") {
 			pronounceText = "VoiceOps на связи"
-		} else if strings.Contains(text, "проверь") || 
-                  strings.Contains(text, "мониторинг") || 
-                  strings.Contains(text, "диагностик") ||
-                  strings.Contains(text, "статус") {
+		} else if strings.Contains(text, "проверь") ||
+			strings.Contains(text, "мониторинг") ||
+			strings.Contains(text, "диагностик") ||
+			strings.Contains(text, "статус") {
 
 			pronounceText = service.CheckSites(h.Cfg.Monitoring.URLs)
 
-		} else if strings.Contains(text, "список") || 
-				  strings.Contains(text, "команды") || 
-		 		  strings.Contains(text, "помощь") {
+		} else if strings.Contains(text, "список") ||
+			strings.Contains(text, "команды") ||
+			strings.Contains(text, "помощь") {
 
 			var capabilities []string
 			capabilities = append(capabilities, "- запусти диагностику", "включи пк")
@@ -121,7 +121,6 @@ func (h *Handler) SberWebhook(c *gin.Context) {
 					pronounceText = "Не знаю такое устройство. Проверьте конфиг"
 				}
 			}
-			
 
 		} else {
 			pronounceText = "Я вас не поняла. Скажите 'Список команд' чтобы узнать мои возможности."
